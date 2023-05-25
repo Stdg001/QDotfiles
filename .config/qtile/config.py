@@ -5,6 +5,12 @@ from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from scripts.widget import *
 
+battery_info = psutil.sensors_battery()
+
+@hook.subscribe.startup_complete
+def autostart():
+    subprocess.call([f'{home}/.config/qtile/scripts/autostart.sh'])
+
 # █▄▀ █▀▀ █▄█ █▄▄ █ █▄ █ █▀▄ █▀
 # █ █ ██▄  █  █▄█ █ █ ▀█ █▄▀ ▄█
 
@@ -56,13 +62,13 @@ keys = [
     Key([mod], "e", lazy.spawn("thunar")),
     Key([mod], "t", lazy.spawn(guess_terminal())),
 
-    ################j
+    ################
     # SPECIAL KEYS #
     ################
 
-    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5")),
-    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5")),
-    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute")),
+    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(volume)),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(volume)),
+    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(volume)),
 
     Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause")),
     Key([], "XF86AudioNext", lazy.spawn("playerctl next")),
@@ -121,7 +127,7 @@ screens = [
             widget.TextBox(
                 text="",
                 fontsize=35,
-                foreground=colors["surface2"],
+                foreground=colors["surface1"],
                 background='#0000004D',
                 padding=0),
 
@@ -129,32 +135,29 @@ screens = [
                 padding=10,
                 icon_size=25,
                 background=colors["surface1"]),
+            
+            widget.TextBox(
+                text="",
+                fontsize=35,
+                foreground=colors["surface2"],
+                background=colors["surface1"],
+                padding=0),
 
-            BatteryIcon(
-                    background=colors["surface2"],
-                    padding=3,
-                    scale=0.7,
-                    y_poss=-1.3,
-                    update_delay= 1),
-            
-            WifiIcon(
-                    background=colors["surface2"],
-                    padding=-2,
-                    scale=0.8,
-                    y_poss=1,
-                    update_delay= 1,
-                    interface='wlan0'),
-                    
-            widget.PulseVolume(
+            Battery(
                 background=colors["surface2"],
-                foreground=colors["text"],
-                font="Cascadia Code",
-                limit_max_volume = False,
-                fontsize=20,
-                fmt="󰕾 {} ",
-                mouse_callbacks={
-                    'Button3': lazy.spawn('pavucontrol -t 4')}),
+                padding=-1,
+                scale=0.7,
+                y_poss=-1,
+                update_delay= 1),
             
+            Wifi(
+                background=colors["surface2"],
+                padding=2,
+                scale=0.8,
+                y_poss=0,
+                update_delay= 1,
+                interface='wlan0'),
+
             widget.TextBox(
                 text="",
                 fontsize=35,
@@ -245,7 +248,3 @@ for i, group in enumerate(groups):
         Key([mod], actual_key, lazy.group[group.name].toscreen(toggle=True)),
         # Send window to workspace N
         Key([mod, "shift"], actual_key, lazy.window.togroup(group.name))])
-
-@hook.subscribe.startup_complete
-def autostart():
-    subprocess.call([f'{home}/.config/qtile/scripts/autostart.sh'])
