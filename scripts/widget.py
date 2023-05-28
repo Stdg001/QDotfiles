@@ -338,7 +338,7 @@ class Volume(Battery):
     
     def _get_icon_key(self):
         self.Mixer = alsaaudio.Mixer(control='Master', id=0, cardindex=-1, device='default')
-        self.volume = self.Mixer.getvolume()[1]
+        self.volume = self.Mixer.getvolume()[0]
         key = "volume"
 
         if self.volume is None:
