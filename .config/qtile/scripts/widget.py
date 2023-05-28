@@ -14,13 +14,6 @@ import os
 home = os.path.expanduser('~')
 wstyle = "White"
 
-Wdefaults = [
-        ('custom_icons', {}, 'dict containing key->filename icon map'),
-        ("scaleadd", 0, "Enable/Disable image scaling"),
-        ("y_poss", 0, "Modify y possition"),
-        ('update_delay', 1, 'The delay in seconds between updates'),
-    ]
-
 def longNameParse(text): 
     for string in ["Chromium", "Firefox", "Opera", "Visual Studio Code", "Thunar"]: #Add any other apps that have long names here
         if string in text:
@@ -84,65 +77,16 @@ def screen_menu(qtile):
 
 # WIDGETS
 
-class Battery(base._TextBox, TooltipMixin, ExtendedPopupMixin):
-    '''Battery life indicator widget.'''
+class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
     
-    btheme =  'Minimal'
-    themepath = home + "/.config/qtile/assets/icons/battery_icon/" + wstyle + '/' + btheme
-    
-    binfo = psutil.sensors_battery()
-
-    popup = PopupRelativeLayout(
-        width=250,
-        height=250,
-        background=colors['baset'],
-        controls = [
-            PopupCircularProgress(
-                pos_x=0.2,
-                pos_y=0.2,
-                width=0.6,
-                height=0.6,
-                max_value = 100,
-                value=int(binfo.percent)),
-
-            PopupText(
-                text= str(int(binfo.percent)),
-                font='Cascadia Code',
-                background="#00000000",
-                pos_x=0.5,
-                pos_y=-0.03,
-                width=0.15,
-                height=0.15)
-        ],
-    )
+    defaults = [
+        ('custom_icons', {}, 'dict containing key->filename icon map'),
+        ("scaleadd", 0, "Enable/Disable image scaling"),
+        ("y_poss", 0, "Modify y possition"),
+        ('update_delay', 1, 'The delay in seconds between updates'),
+    ]
 
     filenames = {}
-
-    defaults = Wdefaults + [
-        ('theme_path', themepath, 'Path of the icons'),
-    ] 
-
-    def __init__(self, *args, **kwargs):
-        base._TextBox.__init__(self, *args, **kwargs)
-        TooltipMixin.__init__(self, *args, **kwargs)
-        ExtendedPopupMixin.__init__(self, **kwargs)
-        self.add_defaults(TooltipMixin.defaults)
-        self.add_defaults(Battery.defaults)
-        self.add_defaults(ExtendedPopupMixin.defaults)
-
-        self.add_callbacks({"Button1": self.show_popup})
-
-        self.scale = 1.0 / self.scale
-        self.lowpopup = True
-
-        if self.theme_path:
-            self.length_type = bar.STATIC
-            self.length = 0
-        self.surfaces = {}
-        self.current_icon = 'battery-missing'
-        self.icons = dict([(x, '{0}.png'.format(x)) for x in (
-            'battery-missing', 'battery-0', 'battery-0-charge', 'battery-1', 'battery-1-charge', 'battery-2', 'battery-2-charge', 'battery-3', 'battery-3-charge','battery-4', 'battery-4-charge','battery-5', 'battery-5-charge','battery-6', 'battery-6-charge','battery-7', 'battery-7-charge','battery-8', 'battery-8-charge','battery-9', 'battery-9-charge','battery-10', 'battery-10-charge',)])
-        self.icons.update(self.custom_icons)
 
     def timer_setup(self):
         self.update()
@@ -151,25 +95,6 @@ class Battery(base._TextBox, TooltipMixin, ExtendedPopupMixin):
     def _configure(self, qtile, bar):
         base._TextBox._configure(self, qtile, bar)
         self.setup_images()
-    
-    def _get_icon_key(self):
-        if self.binfo is None or self.binfo.percent is None:
-            key = 'battery-missing'
-        else:
-            key = f'battery-{int(self.binfo.percent / 10)}'
-           
-            if self.binfo.power_plugged:
-                key += '-charge'
-        return key
-
-    def tooltip(self):
-        if self.binfo.percent <= 20 and self.lowpopup and not self.binfo.power_plugged:
-            self.lowpopup = False
-            self.show_popup()
-        elif self.binfo.power_plugged:
-            self.lowpopup = True
-
-        self.tooltip_text = f"{int(self.binfo.percent)}%"
 
     def _update_popup(self):
         pass
@@ -218,13 +143,89 @@ class Battery(base._TextBox, TooltipMixin, ExtendedPopupMixin):
             imgpat.set_filter(cairocffi.FILTER_BEST)
             self.surfaces[key] = imgpat
 
-class Wifi(Battery):
+# class Battery(DefWidget):
+#     '''Battery life indicator widget.'''
+    
+#     btheme =  'Minimal'
+#     themepath = home + "/.config/qtile/assets/icons/battery_icon/" + wstyle + '/' + btheme
+
+#     defaults = DefWidget.defaults + [
+#         ('theme_path', themepath, 'Path of the icons'),
+#     ] 
+
+#     binfo = psutil.sensors_battery()
+#     popup = PopupRelativeLayout(
+#         width=250,
+#         height=250,
+#         background=colors['baset'],
+#         controls = [
+#             PopupCircularProgress(
+#                 pos_x=0.2,
+#                 pos_y=0.2,
+#                 width=0.6,
+#                 height=0.6,
+#                 max_value = 100,
+#                 value=int(binfo.percent)),
+
+#             PopupText(
+#                 text= str(int(binfo.percent)),
+#                 font='Cascadia Code',
+#                 background="#00000000",
+#                 pos_x=0.5,
+#                 pos_y=-0.03,
+#                 width=0.15,
+#                 height=0.15)
+#         ],
+#     )
+
+#     def __init__(self, *args, **kwargs):
+#         base._TextBox.__init__(self, *args, **kwargs)
+#         TooltipMixin.__init__(self, *args, **kwargs)
+#         ExtendedPopupMixin.__init__(self, **kwargs)
+#         self.add_defaults(TooltipMixin.defaults)
+#         self.add_defaults(Battery.defaults)
+#         self.add_defaults(ExtendedPopupMixin.defaults)
+
+#         self.add_callbacks({"Button1": self.show_popup})
+
+#         self.scale = 1.0 / self.scale
+#         self.lowpopup = True
+
+#         if self.theme_path:
+#             self.length_type = bar.STATIC
+#             self.length = 0
+#         self.surfaces = {}
+#         self.current_icon = 'battery-missing'
+#         self.icons = dict([(x, '{0}.png'.format(x)) for x in (
+#             'battery-missing', 'battery-0', 'battery-0-charge', 'battery-1', 'battery-1-charge', 'battery-2', 'battery-2-charge', 'battery-3', 'battery-3-charge','battery-4', 'battery-4-charge','battery-5', 'battery-5-charge','battery-6', 'battery-6-charge','battery-7', 'battery-7-charge','battery-8', 'battery-8-charge','battery-9', 'battery-9-charge','battery-10', 'battery-10-charge',)])
+#         self.icons.update(self.custom_icons)
+    
+#     def _get_icon_key(self):
+#         if self.binfo is None or self.binfo.percent is None:
+#             key = 'battery-missing'
+#         else:
+#             key = f'battery-{int(self.binfo.percent / 10)}'
+           
+#             if self.binfo.power_plugged:
+#                 key += '-charge'
+#         return key
+
+#     def tooltip(self):
+#         if self.binfo.percent <= 20 and self.lowpopup and not self.binfo.power_plugged:
+#             self.lowpopup = False
+#             self.show_popup()
+#         elif self.binfo.power_plugged:
+#             self.lowpopup = True
+
+#         self.tooltip_text = f"{int(self.binfo.percent)}%"
+
+class Wifi(DefWidget):
     '''Wifi Signal Indicator'''
 
     wtheme =  'Minimal'
     themepath = home + "/.config/qtile/assets/icons/wifi_icon/" + wstyle + '/' + wtheme
 
-    defaults = Wdefaults + [
+    defaults = DefWidget.defaults + [
         ('theme_path', themepath, 'Path of the icons'),
         ("interface", "wlan0", "The interface to monitor"),
     ]
@@ -233,7 +234,6 @@ class Wifi(Battery):
         base._TextBox.__init__(self, *args, **kwargs)
         TooltipMixin.__init__(self, *args, **kwargs)
         self.add_defaults(TooltipMixin.defaults)
-        # self.add_defaults(Battery.defaults)
         self.add_defaults(Wifi.defaults)
 
         self.scale = 1.0 / self.scale
@@ -242,13 +242,7 @@ class Wifi(Battery):
             self.length = 0
         self.surfaces = {}
         self.current_icon = 'wifi-missing'
-        self.icons = dict([(x, '{0}.png'.format(x)) for x in (
-            'wifi-missing',
-            'wifi-bad',
-            'wifi-medium',
-            'wifi-good',
-            'wifi-perfect',
-        )])
+        self.icons = dict([(x, '{0}.png'.format(x)) for x in ('wifi-missing', 'wifi-bad', 'wifi-medium', 'wifi-good', 'wifi-perfect')])
         self.icons.update(self.custom_icons)
 
     def get_status(self, interface_name):
@@ -279,46 +273,36 @@ class Wifi(Battery):
         quality, essid = self.get_status(self.interface)
         self.tooltip_text = f'{essid} {quality}'
 
-class Volume(Battery):
+class Volume(DefWidget):
 
     vtheme =  'Minimal'
     themepath = home + "/.config/qtile/assets/icons/volume_icon/" + wstyle + '/' + vtheme
 
-    def get_img():
-        Mixer = alsaaudio.Mixer(control='Master', id=0, cardindex=-1, device='default')
-        volume = Mixer.getvolume()[0]
-
-        if volume > 0:
-            img = 'sound'
-        elif volume == 0:
-            img = 'nosound'
-        return img, volume
-    
-    popup = PopupRelativeLayout(
-        width=250,
-        height=250,
-        background=colors['baset'],
-        controls = [
-            PopupImage(
-                filename=f"/home/Stvll/.config/qtile/assets/sources/{get_img()[0]}.png",
-                pos_x=-0.4,
-                pos_y=-0,
-                width=1,
-                height=1,
-                background="#00000000"),
+    # popup = PopupRelativeLayout(
+    #     width=250,
+    #     height=250,
+    #     background=colors['baset'],
+    #     controls = [
+    #         PopupImage(
+    #             filename=f"/home/Stvll/.config/qtile/assets/sources/{get_img()[0]}.png",
+    #             pos_x=-0.4,
+    #             pos_y=-0,
+    #             width=1,
+    #             height=1,
+    #             background="#00000000"),
             
-            PopupSlider(
-                pos_x=0.2,
-                background="#00000000",
-                pos_y=0.2,
-                width=0.8,
-                height=0.6,
-                value=get_img()[1],
-                max_value=100)
-        ]
-    )
+    #         PopupSlider(
+    #             pos_x=0.2,
+    #             background="#00000000",
+    #             pos_y=0.2,
+    #             width=0.8,
+    #             height=0.6,
+    #             value=get_img()[1],
+    #             max_value=100)
+    #     ]
+    # )
 
-    defaults = Wdefaults + [
+    defaults = DefWidget.defaults + [
         ('theme_path', themepath, 'Path of the icons'),
     ] 
 
@@ -337,10 +321,10 @@ class Volume(Battery):
         self.icons.update(self.custom_icons)
     
     def _get_icon_key(self):
-        self.Mixer = alsaaudio.Mixer(control='Master', id=0, cardindex=-1, device='default')
+        self.Mixer = alsaaudio.Mixer(control='Master', device='default')
         self.volume = self.Mixer.getvolume()[0]
+    
         key = "volume"
-
         if self.volume is None:
             key += '-0'
         else:
@@ -356,3 +340,4 @@ class Volume(Battery):
     
     def tooltip(self):
         self.tooltip_text = f'{self.volume}'
+

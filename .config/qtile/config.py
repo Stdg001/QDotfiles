@@ -4,8 +4,9 @@ from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from scripts.widget import *
-import test
 
+proc = subprocess.run('echo /sys/class/net/*/wireless | awk -F"/" "{ print \$5 }"', shell=True, stdout = subprocess.PIPE)
+wlan = proc.stdout.decode("utf8").rstrip("\n")
 battery_info = psutil.sensors_battery()
 
 @hook.subscribe.startup_complete
@@ -66,9 +67,9 @@ keys = [
     # SPECIAL KEYS #
     ################
 
-    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(Volume.show_popup)),
-    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(Volume.show_popup)),
-    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(Volume.show_popup)),
+    # Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(Volume.show_popup)),
+    # Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(Volume.show_popup)),
+    # Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(Volume.show_popup)),
 
     Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause")),
     Key([], "XF86AudioNext", lazy.spawn("playerctl next")),
@@ -142,14 +143,14 @@ screens = [
                 background=colors["surface1"],
                 padding=0),
 
-            Battery(
-                scale=0.7,
-                y_poss=-2,
-                update_delay= 1,
-                popup_layout = Battery.popup,
-                popup_hide_timeout = 0,
-                popup_show_args = {"relative_to": 5, "relative_to_bar": True},
-                background = colors["surface2"]),
+            # Battery(
+            #     scale=0.7,
+            #     y_poss=-2,
+            #     update_delay= 1,
+            #     popup_layout = Battery.popup,
+            #     popup_hide_timeout = 0,
+            #     popup_show_args = {"relative_to": 5, "relative_to_bar": True},
+            #     background = colors["surface2"]),
 
             Volume(
                 background=colors["surface2"],
@@ -164,8 +165,8 @@ screens = [
                 scale=0.6,
                 y_poss=1,
                 update_delay= 1,
-                interface='wlan0'),
-
+                interface=wlan),
+                
             widget.TextBox(
                 text="",
                 fontsize=35,
@@ -230,8 +231,6 @@ floating_layout = layout.Floating(float_rules=[
     Match(wm_class='makebranch'),
     Match(wm_class='maketag'),
     Match(wm_class='ssh-askpass'),
-    Match(wm_class='pavucontrol'),
-    Match(wm_class='nitrogen'),
     Match(wm_class='lxappearance'),
     Match(wm_class='android-studio'),
     Match(wm_class='python2.7'),
