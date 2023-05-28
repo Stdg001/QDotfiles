@@ -1,7 +1,4 @@
-
-style = 'mocha'
-
-colors = {
+colors_list = {
     "latte": {
         "rosewater": ["#dc8a78"],
         "flamingo": ["#dd7878"],
@@ -62,6 +59,8 @@ colors = {
         "crust": ["#11111b"]
     }
 }
+
+colors = colors_list["mocha"]
 
 # # Color palette pastel
 # colors = {

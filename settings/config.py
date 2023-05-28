@@ -4,6 +4,7 @@ from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from scripts.widget import *
+import test
 
 battery_info = psutil.sensors_battery()
 
@@ -53,7 +54,6 @@ keys = [
     Key([mod], "f", lazy.window.toggle_fullscreen()),
     Key([mod], "b", lazy.hide_show_bar("all")),
 
-
     ################
     #     APPS     #
     ################
@@ -66,9 +66,9 @@ keys = [
     # SPECIAL KEYS #
     ################
 
-    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(volume)),
-    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(volume)),
-    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(volume)),
+    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(Volume.show_popup)),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(Volume.show_popup)),
+    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(Volume.show_popup)),
 
     Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause")),
     Key([], "XF86AudioNext", lazy.spawn("playerctl next")),
@@ -82,7 +82,6 @@ keys = [
     #    POP UPS   #
     ################
 
-    Key([mod], "F4", lazy.function(battery_low)),
     Key([mod], "F3", lazy.function(screen_menu))
 ]
 
@@ -144,17 +143,26 @@ screens = [
                 padding=0),
 
             Battery(
-                background=colors["surface2"],
-                padding=-1,
                 scale=0.7,
+                y_poss=-2,
+                update_delay= 1,
+                popup_layout = Battery.popup,
+                popup_hide_timeout = 0,
+                popup_show_args = {"relative_to": 5, "relative_to_bar": True},
+                background = colors["surface2"]),
+
+            Volume(
+                background=colors["surface2"],
+                scale=0.8,
                 y_poss=-1,
-                update_delay= 1),
-            
+                update_delay= 1,
+                padding=-3),
+
             Wifi(
                 background=colors["surface2"],
-                padding=2,
-                scale=0.8,
-                y_poss=0,
+                padding = -4,
+                scale=0.6,
+                y_poss=1,
                 update_delay= 1,
                 interface='wlan0'),
 
