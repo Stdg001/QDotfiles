@@ -1,4 +1,4 @@
-import subprocess
-wifi = subprocess.run('echo /sys/class/net/*/wireless | awk -F"/" "{ print \$5 }"', shell=True)
+import psutil
 
-print(wifi)
+binfo = psutil.sensors_battery()
+print(binfo.percent)
