@@ -1,5 +1,5 @@
 import subprocess
-from libqtile import hook, layout
+from libqtile import hook, layout, widget
 from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
@@ -147,7 +147,6 @@ screens = [
             Status_Widgets(
                 scale = .7,
                 background=colors["surface2"],
-                spacing = -11
             ),
 
             widget.TextBox(

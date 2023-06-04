@@ -49,7 +49,7 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
         self.length = 0
         self.icon_width = 0
 
-        self.current_icons = {}
+        self.current_icons = ()
         self.surfaces = {}
 
     def png(self, carpeta):
@@ -60,24 +60,32 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
                     lista_pngs.append((ruta, os.path.splitext(archivo)[0]))
         return lista_pngs
 
-    def timer_setup(self):
-        self.update()
-        self.timeout_add(self.update_delay, self.timer_setup)
-
-    def _configure(self, qtile, bar):
-        base._TextBox._configure(self, qtile, bar)
-        self.setup_images()
-
-    def _update_popup(self): pass
-
-    def update(self): self.draw() if self._get_icons_key() != self.current_icons else None
+    def setup_images(self):
+        for path, key in self.imgs:
+            img_path = f'{path}/{key}.png'
+            img = Image.open(img_path)
+            input_width, input_height = img.size
+            img.close()
+            sp = input_height / (self.bar.height - 1)
+            width = input_width / sp
+            self.icon_width = int(width)
+            img = cairocffi.ImageSurface.create_from_png(img_path)
+            imgpat = cairocffi.SurfacePattern(img)
+            scaler = cairocffi.Matrix()
+            scaler.scale(sp, sp)
+            scaler.scale(self.scale, self.scale)
+            factor = (1 - 1 / self.scale) / 2
+            scaler.translate(-width * factor, -width * factor)
+            scaler.translate(self.actual_padding * -1, self.y_poss)
+            imgpat.set_matrix(scaler)
+            imgpat.set_filter(cairocffi.FILTER_BEST)
+            self.surfaces[key] = imgpat
 
     def draw(self):
-        self.current_icons = self._get_icons_key()
-        num_icons = len({key: value for key, value in self.current_icons.items() if value is not None})
+        num_icons = len({x for x in self.current_icons if x != None})
         offset = self.offset
 
-        for index, (key, width) in enumerate(self.current_icons.items()):
+        for index, key in enumerate(self.current_icons):
             if key == None or key not in self.surfaces: continue
             if index > 1: index = 1
 
@@ -90,24 +98,21 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
             self.drawer.ctx.paint()
             self.drawer.draw(offsetx=offset, width=icon_width)
 
-    def setup_images(self):
-        for path, key in self.imgs:
-            img_path = f'{path}/{key}.png'
-            img = Image.open(img_path)
-            input_width, input_height = img.size
-            img.close()
-            sp = input_height / (self.bar.height - 1)
-            width = input_width / sp
-            self.icon_width = int(input_width)
-            img = cairocffi.ImageSurface.create_from_png(img_path)
-            scaler = cairocffi.Matrix()
-            scaler.scale(sp * self.scale, sp * self.scale)
-            factor = (1 - 1 / self.scale) / 2
-            scaler.translate(-width * factor - self.actual_padding, -width * factor - self.y_poss)
-            imgpat = cairocffi.SurfacePattern(img)
-            imgpat.set_matrix(scaler)
-            imgpat.set_filter(cairocffi.FILTER_BEST)
-            self.surfaces[key] = imgpat
+    def timer_setup(self):
+        self.update()
+        self.timeout_add(self.update_delay, self.timer_setup)
+
+    def _configure(self, qtile, bar):
+        base._TextBox._configure(self, qtile, bar)
+        self.setup_images()
+
+    def _update_popup(self): pass
+
+    def update(self):
+        icons = self._getkey()
+        if self._getkey() != self.current_icons:
+            self.current_icons = icons
+            self.draw() 
 
 class Status_Widgets(DefWidget):
     defaults = DefWidget.defaults + [
@@ -120,7 +125,7 @@ class Status_Widgets(DefWidget):
         DefWidget.__init__(self, *args, **kwargs)
         self.imgs = self.png(self.Bpath) + self.png(self.Wpath) + self.png(self.Vpath)
 
-    def _get_icons_key(self):
+    def _getkey(self):
         binfo = psutil.sensors_battery()
         volume = alsaaudio.Mixer(control='Master', device='default')
         quality = iwlib.get_iwconfig(self.interface).get("stats", {}).get("quality")
