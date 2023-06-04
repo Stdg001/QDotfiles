@@ -4,9 +4,12 @@ from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from assets.scripts.widget import *
+from assets.scripts.catppuccin import *
+from test import *
 
 proc = subprocess.run('echo /sys/class/net/*/wireless | awk -F"/" "{ print \$5 }"', shell=True, stdout = subprocess.PIPE)
 wlan = proc.stdout.decode("utf8").rstrip("\n")
+
 battery_info = psutil.sensors_battery()
 
 @hook.subscribe.startup_complete
@@ -67,9 +70,9 @@ keys = [
     # SPECIAL KEYS #
     ################
 
-    # Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5"), lazy.function(Volume.show_popup)),
-    # Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5"), lazy.function(Volume.show_popup)),
-    # Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute"), lazy.function(Volume.show_popup)),
+    Key([], "XF86AudioLowerVolume", lazy.spawn("pamixer --decrease 5")),
+    Key([], "XF86AudioRaiseVolume", lazy.spawn("pamixer --increase 5")),
+    Key([], "XF86AudioMute", lazy.spawn("pamixer --toggle-mute")),
 
     Key([], "XF86AudioPlay", lazy.spawn("playerctl play-pause")),
     Key([], "XF86AudioNext", lazy.spawn("playerctl next")),
@@ -82,8 +85,6 @@ keys = [
     ################
     #    POP UPS   #
     ################
-
-    Key([mod], "F3", lazy.function(screen_menu))
 ]
 
 mouse = [
@@ -102,37 +103,7 @@ mouse = [
 
 # █▄▄ ▄▀█ █▀█
 # █▄█ █▀█ █▀▄
-
-status_widgets = [
-            Wifi(
-                background=colors["surface2"],
-                padding = -8,
-                scale=0.6,
-                y_poss=1,
-                update_delay= 1,
-                interface=wlan),
-            
-            Volume(
-                background=colors["surface2"],
-                scale=0.8,
-                y_poss=-1,
-                update_delay= 1,
-                padding=-3),
-]
-
-if psutil.sensors_battery() != None:
-    status_widgets.append(
-        Battery(
-            scale=0.7,
-            y_poss=-2,
-            update_delay=1,
-            popup_layout=Battery.popup,
-            popup_hide_timeout=0,
-            popup_show_args={"relative_to": 5, "relative_to_bar": True},
-            background=colors["surface2"]
-        )
-    )
-
+    
 screens = [
     Screen(
         bottom=bar.Bar([
@@ -165,7 +136,7 @@ screens = [
                 padding=10,
                 icon_size=25,
                 background=colors["surface1"]),
-            
+
             widget.TextBox(
                 text="",
                 fontsize=35,
@@ -173,7 +144,11 @@ screens = [
                 background=colors["surface1"],
                 padding=0),
 
-            *status_widgets,
+            Status_Widgets(
+                scale = .7,
+                background=colors["surface2"],
+                spacing = -11
+            ),
 
             widget.TextBox(
                 text="",
