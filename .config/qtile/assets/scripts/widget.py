@@ -68,7 +68,6 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
             img.close()
             sp = input_height / (self.bar.height - 1)
             width = input_width / sp
-            self.icon_width = int(width)
             img = cairocffi.ImageSurface.create_from_png(img_path)
             imgpat = cairocffi.SurfacePattern(img)
             scaler = cairocffi.Matrix()
@@ -79,22 +78,27 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
             scaler.translate(self.actual_padding * -1, self.y_poss)
             imgpat.set_matrix(scaler)
             imgpat.set_filter(cairocffi.FILTER_BEST)
-            self.surfaces[key] = imgpat
+            self.surfaces[key] = imgpat, int(width)
 
     def draw(self):
-        num_icons = len({x for x in self.current_icons if x != None})
         offset = self.offset
+        total_width = 0
 
         for index, key in enumerate(self.current_icons):
             if key == None or key not in self.surfaces: continue
             if index > 1: index = 1
 
-            icon_width = self.icon_width + self.spacing
-            self.length = num_icons * icon_width
+            surface, width = self.surfaces[key]
+            total_width = total_width + width
+            
+            logger.warn(total_width)
+            self.length = total_width
+
+            icon_width = width + self.spacing
 
             offset = offset + index * icon_width
             self.drawer.clear(self.background or self.bar.background)
-            self.drawer.ctx.set_source(self.surfaces[key])
+            self.drawer.ctx.set_source(surface)
             self.drawer.ctx.paint()
             self.drawer.draw(offsetx=offset, width=icon_width)
 
