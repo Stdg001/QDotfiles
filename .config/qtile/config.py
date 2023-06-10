@@ -145,7 +145,7 @@ screens = [
                 padding=0),
 
             Status_Widgets(
-                scale = .7,
+                scale = .8,
                 background=colors["surface2"],
             ),
 
