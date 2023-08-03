@@ -4,10 +4,8 @@ import iwlib
 from PIL import Image
 import cairocffi
 from libqtile.log_utils import logger
-from libqtile import bar, widget
+from libqtile import bar
 from libqtile.widget import base
-from libqtile.lazy import lazy
-from qtile_extras.widget.mixins import TooltipMixin, ExtendedPopupMixin
 from qtile_extras.popup.toolkit import *
 import netifaces
 import glob
@@ -23,7 +21,7 @@ def longNameParse(text):
     long_names = ["Chromium", 'GIMP', "Firefox", "Opera", "Visual Studio Code", "Thunar"]
     return next((name for name in long_names if name in text), text)
 
-class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
+class DefWidget(base._TextBox):
     defaults = [
         ("y_poss", 0, "Modify y position"),
         ("scale", 1, "Icons size"),
@@ -32,10 +30,6 @@ class DefWidget(base._TextBox, TooltipMixin, ExtendedPopupMixin):
 
     def __init__(self, *args, **kwargs):
         base._TextBox.__init__(self, *args, **kwargs)
-        TooltipMixin.__init__(self, *args, **kwargs)
-        ExtendedPopupMixin.__init__(self, **kwargs)
-        self.add_defaults(ExtendedPopupMixin.defaults)
-        self.add_defaults(TooltipMixin.defaults)
         self.add_defaults(self.defaults)
 
         self.scale = 1.0 / self.scale
@@ -122,4 +116,7 @@ class Status_Widgets(DefWidget):
         keyv = f'volume-{0 if volume is None or volume.getvolume()[0] == 0 or volume.getmute() == 1 else 30 if volume.getvolume()[0] <= 30 else 60 if volume.getvolume()[0] <= 60 else 100}'
         keyw = f'wifi-{"missing" if quality is None else "bad" if quality <= 17 else "medium" if quality <= 35 else "good" if quality <= 52 else "perfect"}'
         keyb = None if binfo is None else (f'battery-{int(binfo.percent / 10)}-charge' if binfo.power_plugged else f'battery-{int(binfo.percent / 10)}')
-        return keyw, keyv, keyb
+        return keyw, keyb, keyv
+    
+    def action(self):
+        pass

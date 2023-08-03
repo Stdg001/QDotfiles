@@ -1,11 +1,12 @@
-import subprocess
+from libqtile.command.client import InteractiveCommandClient
 from libqtile import hook, layout, widget
 from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from assets.scripts.widget import *
 from assets.scripts.catppuccin import *
-from test import *
+import subprocess
+from libqtile.lazy import lazy
 
 proc = subprocess.run('echo /sys/class/net/*/wireless | awk -F"/" "{ print \$5 }"', shell=True, stdout = subprocess.PIPE)
 wlan = proc.stdout.decode("utf8").rstrip("\n")
@@ -15,6 +16,21 @@ battery_info = psutil.sensors_battery()
 @hook.subscribe.startup_complete
 def autostart():
     subprocess.call([f'{home}/.config/qtile/assets/scripts/autostart.sh'])
+
+def toggle_between_screens():
+    client = InteractiveCommandClient()
+
+    screens = []
+    groups = []
+
+    for i in range(1, 7):
+        if client.group[str(i)].info()["screen"] != None:
+            screens.append(client.group[str(i)].info()["screen"])
+            groups.append(client.group[str(i)].info()["name"])
+
+    if len(screens) == 2:
+        client.group[groups[0]].toscreen(screens[1])
+        client.group[groups[1]].toscreen(screens[0])
 
 # █▄▀ █▀▀ █▄█ █▄▄ █ █▄ █ █▀▄ █▀
 # █ █ ██▄  █  █▄█ █ █ ▀█ █▄▀ ▄█
@@ -48,7 +64,7 @@ keys = [
     Key([mod, "shift"], "Down", lazy.layout.shuffle_down()),
     Key([mod, "shift"], "Up", lazy.layout.shuffle_up()),
 
-    Key([mod], "bar", lazy.spawn("python .config/qtile/scripts/toggle_between_screens.py")),
+    Key([mod], "bar", lazy.spawn(toggle_between_screens)),
     Key([mod], "p", lazy.layout.flip()),
     Key([mod], "Tab", lazy.next_layout()),
     Key([mod], "w", lazy.window.kill()),
@@ -85,19 +101,12 @@ keys = [
     ################
     #    POP UPS   #
     ################
+    
 ]
 
 mouse = [
-    Drag(
-        [mod],
-        "Button1",
-        lazy.window.set_position_floating(),
-        start=lazy.window.get_position()),
-    Drag(
-        [mod],
-        "Button3",
-        lazy.window.set_size_floating(),
-        start=lazy.window.get_size()),
+    Drag([mod], "Button1", lazy.window.set_position_floating(), start=lazy.window.get_position()),
+    Drag([mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()),
     Click([mod], "Button2", lazy.window.toggle_floating())
 ]
 
@@ -159,7 +168,7 @@ screens = [
             widget.Clock(
                 background=colors["mantle"],
                 foreground=colors["text"],
-                format="%H:%M\n%d/%m/%Y",
+                format="%Y-%m-%d %a %H:%M",
                 font="Cascadia Code",
                 fontsize=12.5,
                 padding=0),
