@@ -18,7 +18,7 @@ color = "White"
 wstyle = 'Minimal'
 
 def longNameParse(text):
-    long_names = ["Chromium", 'GIMP', "Firefox", "Opera", "Visual Studio Code", "Thunar"]
+    long_names = ["Chromium", 'GIMP', "Firefox", "Opera", "Visual Studio Code", "Thunar", "LibreOffice"]
     return next((name for name in long_names if name in text), text)
 
 class DefWidget(base._TextBox):

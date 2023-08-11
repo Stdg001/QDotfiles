@@ -4,7 +4,7 @@ from libqtile.config import Match, Key, Group, Screen, Drag, Click
 from libqtile.utils import guess_terminal
 from qtile_extras import widget as widgetx
 from assets.scripts.widget import *
-from assets.scripts.catppuccin import *
+from assets.scripts.settings import *
 import subprocess
 from libqtile.lazy import lazy
 
@@ -47,15 +47,8 @@ keys = [
     Key([mod], "Left", lazy.layout.left()),
     Key([mod], "Right", lazy.layout.right()),
 
-    Key([mod, "control"], "Up",
-        lazy.layout.grow_up(),
-        lazy.layout.grow()
-        ),
-
-    Key([mod, "control"], "Down",
-        lazy.layout.grow_down(),
-        lazy.layout.shrink()),
-
+    Key([mod, "control"], "Up", lazy.layout.grow_up(), lazy.layout.grow()),
+    Key([mod, "control"], "Down", lazy.layout.grow_down(), lazy.layout.shrink()),
     Key([mod, "control"], "Left", lazy.layout.grow_left()),
     Key([mod, "control"], "Right", lazy.layout.grow_right()),
 
@@ -78,7 +71,7 @@ keys = [
     #     APPS     #
     ################
 
-    Key([mod], "m", lazy.spawn("rofi -show drun")),
+    Key([mod], 'm', lazy.spawn('rofi -show drun')),
     Key([mod], "e", lazy.spawn("thunar")),
     Key([mod], "t", lazy.spawn(guess_terminal())),
 
@@ -120,64 +113,75 @@ screens = [
                 text="",
                 fontsize=35,
                 foreground=colors['baset'],
-                padding=0),
+                padding=0
+            ),
 
             widget.TaskList(
                 font="Cascadia Code",
                 rounded = True,
-                theme_mode="fallback",
                 foreground=colors["text"],
                 background=colors['baset'],
                 txt_floating="",
                 txt_maximized="",
                 txt_minimized="",
-                highlight_method="block",
-                parse_text = longNameParse),
-
-            widget.TextBox(
-                text="",
-                fontsize=35,
-                foreground=colors["surface1"],
-                background=colors['baset'],
-                padding=0),
-
-            widgetx.StatusNotifier(
-                padding=10,
-                icon_size=25,
-                background=colors["surface1"]),
-
-            widget.TextBox(
-                text="",
-                fontsize=35,
-                foreground=colors["surface2"],
-                background=colors["surface1"],
-                padding=0),
-
-            Status_Widgets(
-                scale = .8,
-                background=colors["surface2"],
+                highlight_method='block',
+                border=colors['surface2'],
+                theme_mode='preferred',
+                padding_y=5,
+                parse_text = longNameParse
             ),
 
             widget.TextBox(
                 text="",
                 fontsize=35,
-                foreground=colors["mantle"],
+                foreground=colors["surface2"],
+                background=colors['baset'],
+                padding=0
+            ),
+
+            widgetx.StatusNotifier(
+                padding=10,
+                icon_size=25,
+                background=colors["surface2"]
+            ),
+
+            widget.TextBox(
+                text="",
+                fontsize=35,
+                foreground=colors["surface1"],
                 background=colors["surface2"],
-                padding=0),
+                padding=0
+            ),
+
+            Status_Widgets(
+                scale = .8,
+                background=colors["surface1"],
+            ),
+
+            widget.TextBox(
+                text="",
+                fontsize=35,
+                foreground=colors["surface0"],
+                background=colors["surface1"],
+                padding=0
+            ),
 
             widget.Clock(
-                background=colors["mantle"],
+                background=colors["surface0"],
                 foreground=colors["text"],
                 format="%Y-%m-%d %a %H:%M",
                 font="Cascadia Code",
                 fontsize=12.5,
-                padding=0),
+                padding=0
+            ),
 
             widget.TextBox(
                 text="",
                 fontsize=30,
-                foreground=colors["mantle"],
-                padding=0)],
+                foreground=colors["surface0"],
+                padding=0
+            )
+        ],
             size=30, 
             background='#00000000',
             margin=[0,5,5,5]
@@ -189,10 +193,11 @@ screens = [
 # █▄ █▀█  █  █▄█ █▄█  █
 
 layout_conf = {
-        "border_normal": colors["base"],
-        "border_focus": colors["lavender"],
-        "border_width": 4,
-        "margin": 10}
+    "border_normal": colors["base"],
+    "border_focus": colors["lavender"],
+    "border_width": 4,
+    "margin": 10
+}
 
 layout_conf_bsp = {
     "border_normal": colors["base"],
@@ -202,17 +207,20 @@ layout_conf_bsp = {
     "margin": 5,
     "grow_amount": 5,
     "fair": False,
-    "ratio": 1.3}
+    "ratio": 1.3
+}
 
 layout_conf_max = {
     "border_normal": colors["base"],
     "border_focus": colors["lavender"],
     "border_width": 0,
-    "margin": 5}
+    "margin": 5
+}
 
 layouts = [
     layout.Max(**layout_conf_max),
-    layout.Bsp(**layout_conf_bsp)]
+    layout.Bsp(**layout_conf_bsp)
+]
 
 floating_layout = layout.Floating(float_rules=[
     *layout.Floating.default_float_rules,
@@ -227,8 +235,6 @@ floating_layout = layout.Floating(float_rules=[
     Match(wm_class='python2.7'),
     Match(wm_class='launcher-4'),
     Match(wm_class='stacer'),
-    Match(wm_class='VirtualBox Manager'),
-    Match(wm_class='VirtualBox Machine')
 ], **layout_conf)
 
 # █▀▀ █▀█ █▀█ █ █ █▀█ █▀
