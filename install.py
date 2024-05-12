@@ -1,4 +1,3 @@
-import evdev
 import subprocess
 import re
 import os
@@ -7,7 +6,16 @@ home = os.path.expanduser('~')
 config = f'{home}/.config/qtile'
 supported_cards = ['NVIDIA', 'Intel']
 
+def install_package(package = '', AUR = False):
+    if AUR:
+        subprocess.call(f'paru --noconfirm -Syu {package}', shell= True)
+    else:
+        subprocess.call(f'sudo pacman --noconfirm -Syu {package}', shell= True)
+
 def touchpad_connected():
+    install_package('python-evdev')
+    import evdev
+    
     devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
     for device in devices:
         if "touchpad" in device.name.lower() or "touchpad" in device.phys.lower():
@@ -15,21 +23,10 @@ def touchpad_connected():
     return False
 
 def graphics_card():
-    command = "lspci | grep -i vga"
-    output = subprocess.check_output(command, shell=True).decode("utf-8")
-    pattern = r"([^:]*):\s(.*)\["
-    matches = re.findall(pattern, output)
+    output = subprocess.check_output("lspci | grep -i vga", shell=True).decode("utf-8")
+    matches = re.findall(r"([^:]*):\s(.*)\[", output)
     card_name = matches[0][1].split(" ")[0]
     return card_name
-
-def install_package(package = '', AUR = False):
-    if AUR:
-        subprocess.call(f'yay -Syu {package}', shell= True)
-    else:
-        subprocess.call(f'sudo pacman -Syu {package}', shell= True)
-
-def install_AUR():
-    subprocess.call('')
 
 def check_bluetooth():
     result = subprocess.run(['rfkill', 'list'], capture_output=True, text=True)
@@ -39,12 +36,15 @@ def check_bluetooth():
     else:
         return False
 
-def move(name='', location=''):
-    subprocess.call(f'sudo mv {name} {location}', shell=True)
+def move(files='', location=''):
+    if type(files) == str:
+        print(f"file:{files}, destination:{location}")
 
-move('.config', f'{home}')
-move('.p10k.zsh', f'{home}')
-move('.zshrc', f'{home}')
+    elif type(files) == list:
+        for i in files:
+            print(f"file:{i}, destination:{location}")
+            
+move(['.zshrc', '.config', '.p10k.zsh'], f'{home}')
 
 if touchpad_connected():
     move(f'{config}/assets/settings/xorg\ scripts/50-synaptics.conf', '/etc/X11/xorg.conf.d/')
@@ -52,9 +52,8 @@ if touchpad_connected():
 graphic_card = graphics_card()
 if graphic_card in supported_cards:
     if graphic_card == 'Intel':
-        move(f'{config}/assets/settings/xorg\ scripts/20-intel.conf', '/etc/X11/xorg.conf.d/')
-        move(f'{config}/assets/settings/xorg\ scripts/20-modesetting.conf', '/etc/X11/xorg.conf.d/')
-        move(f'{config}/assets/settings/xorg\ scripts/modesetting.conf', '/etc/X11/xorg.conf.d/')
+        file_source = f'{config}/assets/settings/xorg\ scripts/'
+        move([f'{file_source}20-modesetting.conf', f'{file_source}20-intel.conf', f'{file_source}modesetting.conf'], '/etc/X11/xorg.conf.d/')
         install_package('intel-ucode vulkan-intel')
 
     elif graphic_card == 'NVIDIA':
