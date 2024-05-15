@@ -8,17 +8,16 @@ supported_cards = ['NVIDIA', 'Intel']
 
 def install_package(package = '', AUR = False):
     if AUR:
-        subprocess.call(f'paru --noconfirm -Syu {package}', shell= True)
+        subprocess.call(f'paru --noconfirm -Syu {package}', shell = True)
     else:
-        subprocess.call(f'sudo pacman --noconfirm -Syu {package}', shell= True)
+        subprocess.call(f'sudo pacman --noconfirm -Syu {package}', shell = True)
 
 def move(files='', location=''):
     if type(files) == str:
-        subprocess.call(f'sudo mv {files} {location}')
-
+        subprocess.call(f'sudo mv {files} {location}', shell = True)
     elif type(files) == list:
         for i in files:
-            subprocess.call(f'sudo mv {i} {location}')
+            subprocess.call(f'sudo mv {i} {location}', shell = True)
             
 move(['.zshrc', '.config', '.p10k.zsh'], f'{home}')
 move(f'{config}/settings/rofi_grid.rasi', f'{home}/.local/share/rofi/themes')
