@@ -1,12 +1,9 @@
 import alsaaudio
 import psutil
 import iwlib
-from PIL import Image
 import cairocffi
-from libqtile.log_utils import logger
 from libqtile import bar
 from libqtile.widget import base
-from qtile_extras.popup.toolkit import *
 import netifaces
 import glob
 import os
@@ -16,6 +13,22 @@ wlan = netifaces.gateways()['default'][netifaces.AF_INET][1]
 
 color = "White"
 wstyle = 'Minimal'
+
+def get_dimensions(filename):
+    with open(filename, 'rb') as f:
+        signature = f.read(8)
+        if signature != b'\x89PNG\r\n\x1a\n':
+            raise ValueError("No es un archivo PNG")
+        
+        f.read(4)
+        chunk_type = f.read(4)
+        if chunk_type != b'IHDR':
+            raise ValueError("No se encontró el chunk IHDR")
+        
+        height = int.from_bytes(f.read(4), 'big')
+        width = int.from_bytes(f.read(4), 'big')
+        
+        return width, height
 
 def longNameParse(text):
     long_names = ["Chromium", 'GIMP', "Firefox", "Opera", "Visual Studio Code", "Thunar", "LibreOffice"]
@@ -39,17 +52,16 @@ class DefWidget(base._TextBox):
         self.current_icons = ()
         self.surfaces = {}
 
-    def png(self, carpeta):
+    def png(self, folder):
         return [
             (os.path.dirname(path), os.path.splitext(os.path.basename(path))[0])
-            for path in glob.glob(os.path.join(carpeta, "*.png"))
+            for path in glob.glob(os.path.join(folder, "*.png"))
         ]
 
     def setup_images(self):
         for path, key in self.imgs:
             img_path = os.path.join(path, f'{key}.png')
-            with Image.open(img_path) as img:
-                input_width, input_height = img.size
+            input_width, input_height =  get_dimensions(img_path)
             sp = input_height / (self.bar.height - 1)
             width = input_width / sp
             img = cairocffi.ImageSurface.create_from_png(img_path)
@@ -87,9 +99,6 @@ class DefWidget(base._TextBox):
         base._TextBox._configure(self, qtile, bar)
         self.setup_images()
 
-    def _update_popup(self):
-        pass
-
     def update(self):
         icons = self._getkey()
         if icons != self.current_icons:
@@ -117,6 +126,3 @@ class Status_Widgets(DefWidget):
         keyw = f'wifi-{"missing" if quality is None else "bad" if quality <= 17 else "medium" if quality <= 35 else "good" if quality <= 52 else "perfect"}'
         keyb = None if binfo is None else (f'battery-{int(binfo.percent / 10)}-charge' if binfo.power_plugged else f'battery-{int(binfo.percent / 10)}')
         return keyw, keyb, keyv
-    
-    def action(self):
-        pass
