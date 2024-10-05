@@ -78,7 +78,7 @@ def main():
         card_name = matches[0][1].split(" ")[0]
         
         if card_name == 'Intel':
-            move_files([f'{FILE_SOURCE}20-modesetting.conf', f'{FILE_SOURCE}20-intel.conf', f'{FILE_SOURCE}modesetting.conf'], '/etc/X11/xorg.conf.d/')
+            move_files([f'{FILE_SOURCE}20-modesetting.conf', f'{FILE_SOURCE}modesetting.conf'], '/etc/X11/xorg.conf.d/')  # , f'{FILE_SOURCE}20-intel.conf'
             APPS.extend(['mesa', 'intel-ucode', 'vulkan-intel', ''])
         
         elif card_name == 'NVIDIA':
