@@ -2,6 +2,7 @@ import subprocess
 import re
 import os
 import shutil
+import argparse
 
 # Define las rutas de los archivos y directorios
 HOME = os.path.expanduser('~')
@@ -26,7 +27,7 @@ APPS = [
 SERVICES = ['pulseaudio', 'lightdm']
 
 # Define una función para mover archivos
-def move_files(files, location):
+def move_files(files, location=''):
     """Mueve archivos a una ubicación específica.
 
     Args:
@@ -39,48 +40,61 @@ def move_files(files, location):
         for file in files:
             shutil.move(file, location)
 
-# Mueve los archivos de configuración
-move_files(['.zshrc', '.config', '.p10k.zsh'], HOME)
-move_files(f'{CONFIG}/settings/rofi_grid.rasi', f'{HOME}/.local/share/rofi/themes')
+def main():
+    # Crea un objeto ArgumentParser
+    parser = argparse.ArgumentParser(description="Instalador de paquetes y configurador de sistema.")
 
-# Instala y importar el paquete python-evdev
-subprocess.call(f'paru --noconfirm -Syu python-evdev', shell=True)
+    # Define argumentos opcionales para desactivar acciones
+    parser.add_argument("--no-move-files", action="store_false", help="Desactiva el movimiento de archivos de configuración.")
+    parser.add_argument("--no-gpu", action="store_false", help="Desactiva la configuración de la tarjeta gráfica.")
+    parser.add_argument("--no-bluetooth", action="store_false", help="Desactiva la configuración de Bluetooth.")
+    parser.add_argument("--no-hardware-drivers", action="store_false", help="Desactiva la configuracion del hardware")
 
-from evdev import InputDevice, list_devices
+    # Analiza los argumentos
+    args = parser.parse_args()
 
-# Busca el touchpad y mueve los controladores
-devices = [InputDevice(path) for path in list_devices()]
-for device in devices:
-    if "touchpad" in device.name.lower() or "touchpad" in device.phys.lower():
-        move_files(f'{FILE_SOURCE}/50-synaptics.conf', '/etc/X11/xorg.conf.d/')
+    if args.no_move_files is not False:
+        # Mueve los archivos de configuración
+        move_files(['.zshrc', '.config', '.p10k.zsh'], HOME)
+        move_files(f'{CONFIG}/settings/rofi_grid.rasi', f'{HOME}/.local/share/rofi/themes')
 
-# Desinstala el paquete python-evdev
-subprocess.call(f'sudo pacman --noconfirm -Rs python-evdev', shell=True)
+    if args.no_hardware_drivers is not False:
+        subprocess.call(f'paru --noconfirm -S python-evdev', shell=True)
+        from evdev import InputDevice, list_devices
 
-# Obtiene la tarjeta gráfica
-output = subprocess.check_output("lspci | grep -i vga", shell=True).decode("utf-8")
-matches = re.findall(r"([^:]*):\s(.*)\[", output)
-card_name = matches[0][1].split(" ")[0]
+        # Busca el touchpad y mueve los controladores
+        devices = [InputDevice(path) for path in list_devices()]
+        for device in devices:
+            if "touchpad" in device.name.lower() or "touchpad" in device.phys.lower():
+                move_files(f'{FILE_SOURCE}/50-synaptics.conf', '/etc/X11/xorg.conf.d/')
 
-# Verifica si la tarjeta gráfica es compatible
-if card_name in SUPPORTED_CARDS:
-    if card_name == 'Intel':
-        move_files([f'{FILE_SOURCE}20-modesetting.conf', f'{FILE_SOURCE}20-intel.conf', f'{FILE_SOURCE}modesetting.conf'], '/etc/X11/xorg.conf.d/')
-        APPS.extend(['intel-ucode', 'vulkan-intel'])
-    elif card_name == 'NVIDIA':
-        APPS.extend(['nvidia', 'nvidia-utils', 'nvidia-settings'])
-else:
-    print('\033[93m[WARN] No supported graphic card, you need to install drivers manually\033[00m')
+        subprocess.call(f'sudo pacman --noconfirm -Rs python-evdev', shell=True)
+        
+        if args.no_bluetooth is not False:
+            # Verifica si el dispositivo admite Bluetooth
+            result = subprocess.run(['rfkill', 'list'], capture_output=True, text=True)
+            output = result.stdout.lower()
+            if 'bluetooth' in output and 'soft blocked: no' in output:
+                APPS.extend(['blueman', 'bluez-utils', 'pulseaudio-bluetooth'])
+                SERVICES.append('bluetooth')
 
-# Verifica si el dispositivo admite Bluetooth
-result = subprocess.run(['rfkill', 'list'], capture_output=True, text=True)
-output = result.stdout.lower()
-if 'bluetooth' in output and 'soft blocked: no' in output:
-    APPS.extend(['blueman', 'bluez-utils', 'pulseaudio-bluetooth'])
-    SERVICES.append('bluetooth')
+    if not args.gpu_drivers:
+        output = subprocess.check_output("lspci | grep -i vga", shell=True).decode("utf-8")
+        matches = re.findall(r"([^:]*):\s(.*)\[", output)
+        card_name = matches[0][1].split(" ")[0]
+        
+        if card_name == 'intel':
+            move_files([f'{FILE_SOURCE}20-modesetting.conf', f'{FILE_SOURCE}20-intel.conf', f'{FILE_SOURCE}modesetting.conf'], '/etc/X11/xorg.conf.d/')
+            APPS.extend(['mesa', 'intel-ucode', 'vulkan-intel', ''])
+        
+        elif card_name == 'nvidia':
+            APPS.extend(['nvidia', 'nvidia-utils', 'nvidia-settings'])
+            
+    # Instala las aplicaciones
+    subprocess.call(f'paru --noconfirm -Syu {" ".join(APPS)}', shell=True)
 
-# Instala las aplicaciones
-subprocess.call(f'paru --noconfirm -Syu {" ".join(APPS)}', shell=True)
+    # Habilita los servicios
+    subprocess.call(f'sudo systemctl enable {" ".join(SERVICES)}', shell=True)
 
-# Habilita los servicios
-subprocess.call(f'sudo systemctl enable {" ".join(SERVICES)}', shell=True)
+if __name__ == "__main__":
+    main()
