@@ -19,7 +19,7 @@ APPS = [
     'zsh', 'zsh-autosuggestions', 'zsh-syntax-highlighting', 'zsh-theme-powerlevel10k-git', 'zsh-sudo-git',
     'thunar', 'gvfs', 'xarchiver', 'thunar-archive-plugin',
     'pulseaudio', 'pulseaudio-alsa', 'pulseaudio-jack',
-    'qtile', 'qtile-extras', 'python-psutil', 'python-iwlib', 'python-pyalsaaudio', 'python-netifaces', 'python-dbus-next'
+    'qtile', 'qtile-extras', 'python-psutil', 'python-iwlib', 'python-pyalsaaudio', 'python-netifaces', 'python-dbus-next', 'python-pyxdg'
     'noto-fonts-cjk', 'noto-fonts-emoji', 'noto-fonts-extra', 'noto-fonts', 'ttf-cascadia-code', 'noto-fonts-emoji', 'ttf-mononoki-nerd', 'ttf-roboto-mono-nerd'
 ]
 
@@ -28,12 +28,6 @@ SERVICES = ['pulseaudio', 'lightdm']
 
 # Define una función para mover archivos
 def move_files(files, location=''):
-    """Mueve archivos a una ubicación específica.
-
-    Args:
-        files: Una lista de archivos o una cadena de un archivo.
-        location: La ubicación a la que se moverán los archivos.
-    """
     if isinstance(files, str):
         shutil.move(files, location)
     elif isinstance(files, list):
@@ -83,11 +77,11 @@ def main():
         matches = re.findall(r"([^:]*):\s(.*)\[", output)
         card_name = matches[0][1].split(" ")[0]
         
-        if card_name == 'intel':
+        if card_name == 'Intel':
             move_files([f'{FILE_SOURCE}20-modesetting.conf', f'{FILE_SOURCE}20-intel.conf', f'{FILE_SOURCE}modesetting.conf'], '/etc/X11/xorg.conf.d/')
             APPS.extend(['mesa', 'intel-ucode', 'vulkan-intel', ''])
         
-        elif card_name == 'nvidia':
+        elif card_name == 'NVIDIA':
             APPS.extend(['nvidia', 'nvidia-utils', 'nvidia-settings'])
 
     # Instala las aplicaciones
