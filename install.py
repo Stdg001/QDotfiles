@@ -19,7 +19,7 @@ APPS = [
     'zsh', 'zsh-autosuggestions', 'zsh-syntax-highlighting', 'zsh-theme-powerlevel10k-git', 'zsh-sudo-git',
     'thunar', 'gvfs', 'xarchiver', 'thunar-archive-plugin',
     'pulseaudio', 'pulseaudio-alsa', 'pulseaudio-jack',
-    'qtile', 'qtile-extras', 'python-psutil', 'python-iwlib', 'python-pyalsaaudio', 'python-netifaces',
+    'qtile', 'qtile-extras', 'python-psutil', 'python-iwlib', 'python-pyalsaaudio', 'python-netifaces', 'python-dbus-next'
     'noto-fonts-cjk', 'noto-fonts-emoji', 'noto-fonts-extra', 'noto-fonts', 'ttf-cascadia-code', 'noto-fonts-emoji', 'ttf-mononoki-nerd', 'ttf-roboto-mono-nerd'
 ]
 
@@ -56,7 +56,7 @@ def main():
     if args.no_move_files is not False:
         # Mueve los archivos de configuración
         move_files(['.zshrc', '.config', '.p10k.zsh'], HOME)
-        move_files(f'{CONFIG}/settings/rofi_grid.rasi', f'{HOME}/.local/share/rofi/themes')
+        move_files(f'{CONFIG}/assets/settings/rofi_grid.rasi', f'{HOME}/.local/share/rofi/themes')
 
     if args.no_hardware_drivers is not False:
         subprocess.call(f'paru --noconfirm -S python-evdev', shell=True)
@@ -89,12 +89,13 @@ def main():
         
         elif card_name == 'nvidia':
             APPS.extend(['nvidia', 'nvidia-utils', 'nvidia-settings'])
-            
+
     # Instala las aplicaciones
     subprocess.call(f'paru --noconfirm -Syu {" ".join(APPS)}', shell=True)
 
     # Habilita los servicios
     subprocess.call(f'sudo systemctl enable {" ".join(SERVICES)}', shell=True)
 
+    print('Arch succesfull configurated')
 if __name__ == "__main__":
     main()
