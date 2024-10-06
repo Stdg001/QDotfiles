@@ -8,6 +8,8 @@ import netifaces
 import glob
 import os
 
+from libqtile.log_utils import logger
+
 home = os.path.expanduser('~')
 wlan = netifaces.gateways()['default'][netifaces.AF_INET][1]
 
@@ -36,6 +38,7 @@ def longNameParse(text):
 
 class DefWidget(base._TextBox):
     defaults = [
+        # ('padding', 1, 'Modify padding'),
         ("y_poss", 0, "Modify y position"),
         ("scale", 1, "Icons size"),
         ('update_delay', 1, 'The delay in seconds between updates'),
@@ -59,22 +62,34 @@ class DefWidget(base._TextBox):
         ]
 
     def setup_images(self):
+        max_icon_size = self.bar.height - 1
+        
         for path, key in self.imgs:
             img_path = os.path.join(path, f'{key}.png')
-            input_width, input_height =  get_dimensions(img_path)
-            sp = input_height / (self.bar.height - 1)
-            width = input_width / sp
+            input_height, input_width = get_dimensions(img_path)
+
+            scale_factor = min(max_icon_size / input_height, max_icon_size / input_width)
+            scaled_height = input_height * scale_factor
+            scaled_width = input_width * scale_factor
+
             img = cairocffi.ImageSurface.create_from_png(img_path)
             imgpat = cairocffi.SurfacePattern(img)
+
             scaler = cairocffi.Matrix()
-            scaler.scale(sp, sp)
+            scaler.scale(input_width / scaled_width, input_height / scaled_height)
             scaler.scale(self.scale, self.scale)
+
             factor = (1 - 1 / self.scale) / 2
-            scaler.translate(-width * factor, -width * factor)
-            scaler.translate(self.padding -1, self.y_poss)
+            scaler.translate(-scaled_width * factor, -scaled_width * factor)
+
+            y_offset = (self.bar.height - scaled_height) / 2
+            scaler.translate(self.padding - 1, self.y_poss - y_offset)
+
             imgpat.set_matrix(scaler)
             imgpat.set_filter(cairocffi.FILTER_BEST)
-            self.surfaces[key] = imgpat, int(width)
+            
+            self.surfaces[key] = imgpat, int(scaled_width)
+
 
     def draw(self):
         offset = self.offset
@@ -105,24 +120,34 @@ class DefWidget(base._TextBox):
             self.current_icons = icons
             self.draw()
 
-class Status_Widgets(DefWidget):
+class Status_Widgets(base.InLoopPollText):
     defaults = DefWidget.defaults + [
-        ('Bpath', f'{home}/.config/qtile/assets/icons/battery_icon/{color}/{wstyle}'),
-        ('Wpath', f'{home}/.config/qtile/assets/icons/wifi_icon/{color}/{wstyle}'),
-        ('Vpath', f'{home}/.config/qtile/assets/icons/volume_icon/{color}/{wstyle}'),
+        ('size', 30, 'Icon size'),
+        ('update_interval', .1, 'The delay in seconds between updates'),
         ("interface", wlan),
-    ]
+    ] 
 
-    def __init__(self, *args, **kwargs):
-        DefWidget.__init__(self, *args, **kwargs)
-        self.imgs = self.png(self.Bpath) + self.png(self.Wpath) + self.png(self.Vpath)
+    def __init__(self, **config):
+        base.InLoopPollText.__init__(self, **config)
+        self.add_defaults(self.defaults)
+        
+        self.fontsize = self.size
+        self.font = 'Material Symbols Outlined'
 
-    def _getkey(self):
+    def tick(self):
+        self.update(self.poll())
+        return self.update_interval
+    
+    def poll(self):
         binfo = psutil.sensors_battery()
         volume = alsaaudio.Mixer(control='Master', device='default')
         quality = iwlib.get_iwconfig(self.interface).get("stats", {}).get("quality")
 
-        keyv = f'volume-{0 if volume is None or volume.getvolume()[0] == 0 or volume.getmute() == 1 else 30 if volume.getvolume()[0] <= 30 else 60 if volume.getvolume()[0] <= 60 else 100}'
-        keyw = f'wifi-{"missing" if quality is None else "bad" if quality <= 17 else "medium" if quality <= 35 else "good" if quality <= 52 else "perfect"}'
-        keyb = None if binfo is None else (f'battery-{int(binfo.percent / 10)}-charge' if binfo.power_plugged else f'battery-{int(binfo.percent / 10)}')
-        return keyw, keyb, keyv
+        wicons = ['', '', '', '', '', '']
+        vicons = ['','', '', '']
+        bicons = ['', '', '', '', '', '']
+        
+        w = wicons[(0 if quality is None else 1 if quality <= 14 else 2 if quality <= 28 else 3 if quality <= 42 else 4 if quality <= 56 else 5)]
+        v = vicons[(0 if volume is None or volume.getvolume()[0] == 0 or volume.getmute() == 1 else 1 if volume.getvolume()[0] <= 30 else 2 if volume.getvolume()[0] <= 60 else 3)]
+        b = '' if binfo is None else bicons[(0 if None else None)]
+        return f'{w}{v}{b}'
