@@ -72,7 +72,7 @@ def main():
                 APPS.extend(['blueman', 'bluez-utils', 'pulseaudio-bluetooth'])
                 SERVICES.append('bluetooth')
 
-    if args.gpu_drivers is not False:
+    if args.no_gpu is not False:
         output = subprocess.check_output("lspci | grep -i vga", shell=True).decode("utf-8")
         matches = re.findall(r"([^:]*):\s(.*)\[", output)
         card_name = matches[0][1].split(" ")[0]
